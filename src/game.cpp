@@ -25,12 +25,6 @@ Game2048::Game2048() {
         // 初始化可能值数组，除了第一个为零，其余值都是2的索引次幂
         this->valArr.push_back(pow(2, i));
     }
-    this->gridMat.zeros(this->maxGrid);
-    for (int i = 0; i < 2; ++i){
-        // 初始化两个随机位置
-        vector<Point> emptyPos = this->gridMat.ZerosInd();
-        CreateNumber(emptyPos);
-    }
 
     // UI初始化
     this->gridWidth = 100;
@@ -40,11 +34,14 @@ Game2048::Game2048() {
     this->controlPartHeight = 80;
     this->windowsWidth = this->maxGrid * this->gridWidth + (this->maxGrid + 1) * this->interval + 2 * this->margin;
     this->windowsHeight = this->windowsWidth + this->controlPartHeight;
-    this->gameBox = {this->margin, this->margin + this->controlPartHeight};
     this->scoreBoxWidth = this->gridWidth * 2 + this->interval;
     this->scoreBoxHeight = this->controlPartHeight / 2;
+    this->restartButtonWidth = this->gridWidth+this->interval;
+    this->restartButtonHeight = this->controlPartHeight / 2;
+    this->gameBox = {this->margin, this->margin + this->controlPartHeight};
     this->bestScorePos = {0, 0};
     this->scorePos = {0, scoreBoxHeight};
+    this->restartButtonPos = {this->windowsWidth - (2*this->gridWidth + this->interval + this->restartButtonWidth) / 2, (this->controlPartHeight - this->restartButtonHeight) / 2};
     for (int row = 0; row < this->maxGrid; ++row) {
         this->ltPos.push_back(vector<Point>(this->maxGrid, {0, 0}));
         for (int col = 0; col < this->maxGrid; ++col) {
@@ -56,10 +53,21 @@ Game2048::Game2048() {
 }
 
 void Game2048::GameInit() {
+    // 数值初始化
+    this->score = 0;
+    this->gridMat.zeros(this->maxGrid);
+    this->gridMat.resetMoveFlag();
+    for (int i = 0; i < 2; ++i){
+        // 初始化两个随机位置
+        vector<Point> emptyPos = this->gridMat.ZerosInd();
+        CreateNumber(emptyPos);
+    }
+
     // 窗口初始化
     initgraph(this->windowsWidth, this->windowsHeight, 1);
     setbkcolor(windowsBack);
     cleardevice();
+    this->mainWindowsBuffer = GetImageBuffer();
     this->Draw();
 }
 
@@ -94,21 +102,25 @@ void Game2048::RefreshScore() {
 // 画界面
 void Game2048::Draw() {
     // 最佳分数
-    SubWidget bestScoreBox(this->scoreBoxWidth, this->scoreBoxHeight, windowsBack);
+    SubWidget bestScoreBox(this->scoreBoxWidth, this->scoreBoxHeight, windowsBack, BlockBoard::off);
     bestScoreBox.setFontsize(this->scoreBoxHeight);
     bestScoreBox.setText(" best : ", TextPosition::left);
     bestScoreBox.setText(to_string(this->bestScore), TextPosition::right);
     bestScoreBox.setPosition(this->bestScorePos.x, this->bestScorePos.y);
     // 当前分数
-    SubWidget scoreBox(this->scoreBoxWidth, this->scoreBoxHeight, windowsBack);
+    SubWidget scoreBox(this->scoreBoxWidth, this->scoreBoxHeight, windowsBack, BlockBoard::off);
     scoreBox.setFontsize(this->scoreBoxHeight);
     scoreBox.setText("score: ", TextPosition::left);
     scoreBox.setText(to_string(this->score), TextPosition::right);
     scoreBox.setPosition(this->scorePos.x, this->scorePos.y);
+    // 重新开始
+    SubWidget restartButton(this->restartButtonWidth, this->restartButtonHeight, restartBack, BlockBoard::off);
+    restartButton.setText("RESTART", center);
+    restartButton.setPosition(restartButtonPos.x, restartButtonPos.y);
     // 游戏块
     SubWidget gameBox(this->maxGrid * this->gridWidth + (this->maxGrid + 1) * this->interval,
                       this->maxGrid * this->gridWidth + (this->maxGrid + 1) * this->interval,
-                      back);
+                      back, BlockBoard::off);
     gameBox.setPosition(this->gameBox.x, this->gameBox.y);
     // 游戏块内每个小方块
     for (int row = 0; row < this->maxGrid; ++row) {
@@ -117,7 +129,7 @@ void Game2048::Draw() {
             for (int i = 0; i < this->maxPower; ++i) {
                 // 这个循环用于检查格内的值与可能值数组中哪个相等，并取其索引以获得该值对应的格子颜色
                 if (this->gridMat(row, col) == this->valArr[i]) {
-                    SubWidget block(this->gridWidth, this->gridWidth, colorArr[i]);
+                    SubWidget block(this->gridWidth, this->gridWidth, colorArr[i], BlockBoard::off);
                     if (this->gridMat(row, col) != 0)
                         block.setText(to_string(this->gridMat(row, col)), center);
                     block.setPosition(this->ltPos[row][col].x, this->ltPos[row][col].y);
@@ -129,14 +141,22 @@ void Game2048::Draw() {
 }
 
 bool Game2048::ClickRestart() {
-    SubWidget restartButton();
+    ExMessage m;
+    m = getmessage(EX_MOUSE);
+    if (m.x >= this->restartButtonPos.x && m.x <= this->restartButtonPos.x+this->restartButtonWidth
+    &&  m.y >= this->restartButtonPos.y && m.y <= this->restartButtonPos.y+this->restartButtonHeight
+    &&  m.message == WM_LBUTTONDOWN) {
+        closegraph();
+        this->GameInit();
+        return true;
+    }
+    return false;
 }
 
 bool Game2048::Start() {
     this->GameInit();
     while (true) {
         this->Gaming();
-
     }
 }
 
@@ -159,6 +179,13 @@ void Game2048::Gaming() {
                     this->gridMat.MoveRight();
                 }
                 break;
+            case WM_LBUTTONDOWN:
+                if (m.x >= this->restartButtonPos.x && m.x <= this->restartButtonPos.x+this->restartButtonWidth
+                    &&  m.y >= this->restartButtonPos.y && m.y <= this->restartButtonPos.y+this->restartButtonHeight
+                    &&  m.message == WM_LBUTTONDOWN) {
+                    closegraph();
+                    this->GameInit();
+                }
             default:
                 break;
         }

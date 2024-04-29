@@ -31,6 +31,7 @@ Matrix2048::Matrix2048(std::vector<std::vector<int>> initMat) {
 }
 void Matrix2048::zeros(int size) {
     this->size = size;
+    this->matrix = {};
     for (int i = 0; i < this->size; ++i) {
         this->matrix.emplace_back(this->size, 0);
     }

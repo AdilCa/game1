@@ -30,6 +30,7 @@ private:
     int bestScore;                        // 最佳得分
 
     // UI相关
+    DWORD *mainWindowsBuffer;               // 主窗口句柄
     int gridWidth;                         // 每格宽度
     int interval;                          // 两格间隔宽度
     int fontSize;                          // 数字高度
@@ -42,6 +43,9 @@ private:
     Point scorePos;                       // 显示分数
     int scoreBoxWidth;                     // 分数块宽度
     int scoreBoxHeight;                    // 分数快高度
+    Point restartButtonPos;                 // 重新开始按钮左上角坐标
+    int restartButtonWidth;                 // 重新开始按钮的宽度
+    int restartButtonHeight;                // 重新开始按钮的高度
     std::vector<std::vector<Point>> ltPos; // 每格左上角坐标
 
 public:
