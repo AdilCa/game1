@@ -25,9 +25,10 @@ enum Color {
     twoTo11 = RGB(242, 17, 158),
     back    = RGB(187, 173, 160),
     windowsBack = RGB(250, 248, 239),
+    restartBack = RGB(143, 122, 102),
 };
 
-enum TextPosition {center, left, right, top, bottom, leftTop, leftBottom, rightTop, rightBottom};
+enum TextPosition {center, left, right, top, bottom, leftTop, leftBottom, rightTop, rightBottom, halfTop};
 
 enum BlockBoard {on, off};
 
@@ -40,10 +41,13 @@ private:
     int fontSize;           // 文本高度
 
 public:
-    SubWidget(int width, int height, Color fillColor);  // 初始化一个矩形普通图块
-    SubWidget(int radius, Color fillColor);             // 初始化一个圆形无边框普通图块
+    SubWidget(int width, int height, Color fillColor, BlockBoard mode);  // 初始化一个矩形普通图块
+    SubWidget(int radius, Color fillColor, BlockBoard mode);             // 初始化一个圆形无边框普通图块
 
     IMAGE getImg();     // 获取当前图层
+    int getWidth();
+    int getHeight();
+    DWORD *getImgBuffer();
 
     void setText(std::string text, TextPosition txtPos);       // 放置文本内容
     void setFontsize(int fontsize);                 // 设置字体高度
